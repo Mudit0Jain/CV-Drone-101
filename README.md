@@ -249,3 +249,180 @@ ret, cameraMatrix, dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints,
 print("cameraMatrix:", cameraMatrix)
 This script demonstrates how to perform camera calibration using OpenCV in Google Colab. It detects a chessboard pattern in images, refines the corner positions, and calculates the camera's intrinsic parameters such as the camera matrix (cameraMatrix) and distortion coefficients (dist).
 ```
+
+### Shape Identification and Marking in Images Using OpenCV
+#### Objective:
+The objective of this assignment is to identify and mark shapes in an image using edge detection and contour analysis techniques with OpenCV in a Google Colab environment.
+
+#### Steps:
+##### Import Libraries:
+Import necessary libraries including cv2, numpy, and google.colab.patches.cv2_imshow.
+Mount Google Drive:
+
+##### Function identify_and_mark_shapes(image_path):
+
+* Read an image from the specified image_path.
+* Make a copy of the original image for visualization (original_image).
+* Convert the image to grayscale (gray) and apply Gaussian blur (blurred) to reduce noise.
+* Use Canny edge detection (edges) to find edges in the image.
+* Find contours (contours) in the edge-detected image using cv2.findContours().
+* Iterate through each contour:
+    * Approximate the contour with a polygon using cv2.approxPolyDP() to determine the number of sides.
+    * Calculate the center of the shape using moments (cv2.moments()).
+    * Classify the shape based on the number of sides and store its information.
+    * Sort and Process Shapes:
+
+##### Sort detected shapes by their area in descending order.
+* Draw contours and mark centers for the two largest shapes.
+* Display the annotated image using cv2_imshow().
+* Function identify_and_mark_shapes2(image_path):
+
+##### Performs similar steps as identify_and_mark_shapes(image_path) but organizes the process into a more structured function.
+* Uses dictionaries to store shape information (shape_info), including name, contour, and center.
+* Sorts and processes shapes to draw contours and mark centers for the two largest shapes.
+
+##### Display Results:
+Visualize the processed images showing identified shapes with marked contours and centers.
+
+Example Code:
+```python
+import cv2
+import numpy as np
+from google.colab.patches import cv2_imshow
+from google.colab import drive
+
+# Mount Google Drive to access images
+drive.mount('/content/drive')
+
+def identify_and_mark_shapes(image_path):
+    # Read the image
+    image = cv2.imread(image_path)
+    original_image = image.copy()
+
+    # Convert the image to grayscale
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    # Apply GaussianBlur to reduce noise
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+
+    # Use Canny edge detection to find edges in the image
+    edges = cv2.Canny(blurred, 50, 150)
+
+    # Find contours in the edged image
+    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Initialize lists to store shape information
+    shape_names = []
+    shape_centers = []
+
+    # Iterate through contours
+    for contour in contours:
+        # Approximate the polygonal curve of the contour
+        epsilon = 0.02 * cv2.arcLength(contour, True)
+        approx = cv2.approxPolyDP(contour, epsilon, True)
+
+        # Get the number of sides of the polygon
+        sides = len(approx)
+
+        # Define the center of the shape
+        M = cv2.moments(contour)
+        if M["m00"] != 0:
+            cX = int(M["m10"] / M["m00"])
+            cY = int(M["m01"] / M["m00"])
+            shape_centers.append((cX, cY))
+
+        # Classify shapes based on number of sides
+        if sides == 3:
+            shape_names.append("Triangle")
+        elif sides == 4:
+            shape_names.append("Rectangle" if cv2.contourArea(contour) > 2000 else "Square")
+        elif sides == 5:
+            shape_names.append("Pentagon")
+        elif sides == 6:
+            shape_names.append("Hexagon")
+        elif sides == 7:
+            shape_names.append("Heptagon")
+        elif sides == 8:
+            shape_names.append("Octagon")
+        elif sides == 9:
+            shape_names.append("Nonagon")
+
+    # Combine shape names with contours
+    sorted_shapes = sorted(zip(shape_names, contours), key=lambda x: cv2.contourArea(x[1]), reverse=True)
+
+    # Draw contours and mark centers for the two largest shapes
+    for i, (shape_name, contour) in enumerate(sorted_shapes[:2]):
+        cv2.drawContours(original_image, [contour], -1, (0, 255, 0), 2)
+        cv2.circle(original_image, shape_centers[i], 5, (255, 0, 0), -1)
+        cv2.putText(original_image, f"{shape_name} Center", (shape_centers[i][0] - 20, shape_centers[i][1] - 20),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+
+    # Display the annotated image
+    cv2_imshow(original_image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+# Example: Identify and mark shapes in the image
+image_path = '/content/drive/MyDrive/phots for utility/unzipped_photo1_photo1phone.jpg'
+identify_and_mark_shapes(image_path)
+
+def identify_and_mark_shapes2(image_path):
+    # Read the image
+    image = cv2.imread(image_path)
+    original_image = image.copy()
+
+    # Convert the image to grayscale
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    # Apply GaussianBlur to reduce noise and improve contour detection
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+
+    # Use Canny edge detection to find edges in the image
+    edges = cv2.Canny(blurred, 50, 150)
+
+    # Find contours in the edged image
+    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Initialize lists to store shape information
+    shape_info = []
+
+    # Iterate through contours
+    for contour in contours:
+        # Approximate the polygonal curve of the contour
+        epsilon = 0.02 * cv2.arcLength(contour, True)
+        approx = cv2.approxPolyDP(contour, epsilon, True)
+
+        # Get the number of sides of the polygon
+        sides = len(approx)
+
+        # Define the center of the shape
+        M = cv2.moments(contour)
+        if M["m00"] != 0:
+            cX = int(M["m10"] / M["m00"])
+            cY = int(M["m01"] / M["m00"])
+            shape_info.append({
+                'name': sides,
+                'contour': contour,
+                'center': (cX, cY)
+            })
+
+    # Sort shapes by area in descending order
+    shape_info = sorted(shape_info, key=lambda x: cv2.contourArea(x['contour']), reverse=True)
+
+    # Draw contours and mark centers for the two largest shapes
+    for i in range(min(len(shape_info), 2)):
+        shape = shape_info[i]
+        cv2.drawContours(original_image, [shape['contour']], -1, (0, 255, 0), 2)
+        cv2.circle(original_image, shape['center'], 5, (255, 0, 0), -1)
+        cv2.putText(original_image, f"{shape['name']}-sided Shape Center",
+                    (shape['center'][0] - 20, shape['center'][1] - 20),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+
+    # Display the image with contours and marked centers
+    cv2_imshow(original_image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+```
+##### Example: Identify and mark shapes in the image using a structured approach
+identify_and_mark_shapes2(image_path)
+This script demonstrates how to detect and mark shapes in an image using OpenCV in Google Colab. It utilizes edge detection, contour approximation, and moment calculations to identify shapes based on their number of sides, and then visualizes the identified shapes with contours and marked centers.
