@@ -162,3 +162,90 @@ def Sobel(s1):
 ```
 #### Step 3: Run the Sobel Edge Detection
 Call the Sobel function with the path to your image to apply edge detection and visualize the results.
+
+### Camera Calibration Using OpenCV in Google Colab
+#### Objective:
+The objective of this code is to calibrate a camera using images of a chessboard pattern, captured in a Google Colab environment.
+
+#### Steps:
+##### Define Parameters
+* chessboardSize: Size of the chessboard pattern (6x6 in this case).
+* frameSize: Size of the image frame (640x480 in this case).
+* criteria: Criteria for the termination of the iterative process in corner refinement (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER with iterations set to 30 and epsilon to 0.001).
+* objp: 3D points of the chessboard corners in real-world coordinates, initialized as a grid of zeros and then filled with coordinates scaled by the size of each chessboard square (size_of_cb_sq_mm = 20).
+
+##### Initialize Arrays:
+
+* objpoints: List to store 3D points of chessboard corners in real-world coordinates.
+* imgpoints: List to store 2D points of chessboard corners in image coordinates.
+
+##### Load and Process Images:
+
+* Load images using glob.glob().
+* For each image, convert it to grayscale (cv.cvtColor(img, cv.COLOR_BGR2GRAY)).
+* Use cv.findChessboardCorners() to find corners of the chessboard pattern in the grayscale image.
+* If corners are found (ret == True), refine corner locations using cv.cornerSubPix(), store the 3D object points (objp), and store the refined 2D image points (corners2).
+* Visualize the detected corners using cv.drawChessboardCorners() and cv2_imshow().
+
+##### Camera Calibration:
+
+* Use cv.calibrateCamera() to calibrate the camera using the collected object points (objpoints) and image points (imgpoints).
+* Retrieve the camera matrix (cameraMatrix), distortion coefficients (dist), rotation vectors (rvecs), and translation vectors (tvecs).
+
+##### Display Results:
+Print the calibrated cameraMatrix which contains intrinsic parameters of the camera.
+
+# Example Code:
+```python
+import numpy as np
+import cv2 as cv
+import glob
+from google.colab.patches import cv2_imshow
+
+# Parameters
+chessboardSize = (6, 6)
+frameSize = (640, 480)
+criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+size_of_cb_sq_mm = 20
+
+# Create grid of points in real-world coordinates
+objp = np.zeros((chessboardSize[0] * chessboardSize[1], 3), np.float32)
+objp[:,:2] = np.mgrid[0:chessboardSize[0], 0:chessboardSize[1]].T.reshape(-1, 2)
+objp = objp * size_of_cb_sq_mm
+
+# Arrays to store object points and image points from all images
+objpoints = []  # 3d point in real world space
+imgpoints = []  # 2d points in image plane
+
+# Load images
+link = '/content/drive/MyDrive/Computer vision/WhatsApp Image 2023-12-20 at 17.17.12_9605c69f.jpg'
+images = glob.glob(link)
+
+# Process each image
+for image in images:
+    img = cv.imread(image)
+    gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+
+    # Find chessboard corners
+    ret, corners = cv.findChessboardCorners(gray, chessboardSize, None)
+
+    if ret == True:
+        # Refine corner locations
+        corners2 = cv.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria)
+
+        # Store object points and image points
+        objpoints.append(objp)
+        imgpoints.append(corners2)
+
+        # Visualize corners
+        cv.drawChessboardCorners(img, chessboardSize, corners2, ret)
+        cv2_imshow(img)
+        cv.waitKey(500)
+
+# Calibrate the camera
+ret, cameraMatrix, dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints, frameSize, None, None)
+
+# Print the camera matrix
+print("cameraMatrix:", cameraMatrix)
+This script demonstrates how to perform camera calibration using OpenCV in Google Colab. It detects a chessboard pattern in images, refines the corner positions, and calculates the camera's intrinsic parameters such as the camera matrix (cameraMatrix) and distortion coefficients (dist).
+```
