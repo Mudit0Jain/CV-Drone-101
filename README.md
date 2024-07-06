@@ -91,3 +91,74 @@ def hybrid(s1, s2):
 # Apply the hybrid function
 hybrid('/content/drive/MyDrive/Computer vision/funny-cat-4.jpg', '/content/drive/MyDrive/Computer vision/image00049.jpg')
 ```
+### Image Convolution and Sobel Edge Detection Assignment
+
+#### Objective
+The objective of this assignment is to implement image convolution and apply Sobel edge detection on a grayscale image using Python. This exercise will help you understand the basics of image processing and edge detection.
+
+#### Step 1: Define the Convolution Function
+Create a function `convolve` that takes an image and a kernel as inputs and returns the convolved image.
+
+```python
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+def convolve(image, kernel):
+    # Get image dimensions
+    rows, cols = image.shape
+
+    # Get kernel dimensions
+    krows, kcols = kernel.shape
+
+    # Calculate the padding size
+    pad_rows = krows // 2
+    pad_cols = kcols // 2
+
+    # Pad the image
+    padded_image = np.pad(image, ((pad_rows, pad_rows), (pad_cols, pad_cols)), mode='edge')
+
+    # Initialize the result image
+    result = np.zeros_like(image, dtype=np.float64)
+
+    # Perform convolution
+    for i in range(rows):
+        for j in range(cols):
+            result[i, j] = np.sum(padded_image[i:i+krows, j:j+kcols] * kernel)
+
+    return result
+```
+#### Step 2: Define the Sobel Edge Detection Function
+Create a function Sobel that reads an image, applies the Sobel operator in both x and y directions, calculates the gradient magnitude, and displays the results.
+
+```python
+def Sobel(s1):
+    image = cv2.imread(s1, cv2.IMREAD_GRAYSCALE)
+
+    # Define Sobel kernels
+    sobelk_x = np.array([[-1, 0, 1],
+                         [-3, 0, 3],
+                         [-1, 0, 1]])
+    sobelk_y = np.array([[-1, -3, -1],
+                         [ 0,  0,  0],
+                         [ 1,  3,  1]])
+
+    # Apply convolution with Sobel kernels
+    sobel_x = convolve(image.astype(np.float64), sobelk_x)
+    sobel_y = convolve(image.astype(np.float64), sobelk_y)
+
+    # Calculate gradient magnitude
+    magnitude = np.sqrt(sobel_x**2 + sobel_y**2)
+    normalized = cv2.normalize(magnitude, None, 0, 255, cv2.NORM_MINMAX)
+
+    # Display the results
+    plt.subplot(2, 2, 1), plt.imshow(image, cmap='gray'), plt.title('Original Image')
+    plt.subplot(2, 2, 2), plt.imshow(sobel_x, cmap='gray'), plt.title('Sobel X')
+    plt.subplot(2, 2, 3), plt.imshow(sobel_y, cmap='gray'), plt.title('Sobel Y')
+    plt.subplot(2, 2, 4), plt.imshow(magnitude, cmap='gray'), plt.title('Gradient Magnitude')
+    plt.show()
+
+    return 0
+```
+#### Step 3: Run the Sobel Edge Detection
+Call the Sobel function with the path to your image to apply edge detection and visualize the results.
