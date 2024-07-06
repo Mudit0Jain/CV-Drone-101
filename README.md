@@ -195,7 +195,7 @@ The objective of this code is to calibrate a camera using images of a chessboard
 ##### Display Results:
 Print the calibrated cameraMatrix which contains intrinsic parameters of the camera.
 
-# Example Code:
+## Example Code:
 ```python
 import numpy as np
 import cv2 as cv
